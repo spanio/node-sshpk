@@ -38,8 +38,8 @@ test('setup', async function (t) {
 	JIM_X509 = fs.readFileSync(path.join(testDir, 'jim-x509.pem'));
 	JIM_X509_TXT = fs.readFileSync(path.join(testDir, 'jim-x509-text.pem'));
 
-	d = fs.readFileSync(path.join(testDir, 'id_ecdsa'));
-	EC_KEY = await sshpk.parsePrivateKey(d);
+	d = fs.readFileSync(path.join(testDir, 'local_developer_key.pub'));
+	EC_KEY = await sshpk.parseKey(d);
 	d = fs.readFileSync(path.join(testDir, 'id_ecdsa2'));
 	EC2_KEY = sshpk.parsePrivateKey(d);
 
@@ -77,7 +77,7 @@ test('create ecdsa kms ', async function (t) {
 	var id = sshpk.identityForUser('CA');
 	cert = await sshpk.createSelfSignedCertificate(id, KMS_KEY);
 
-	var parallels = sshpk.identityForUser('parallels');
+	var parallels = sshpk.identityForUser('span-12345678');
 	// var ca = sshpk.identityForHost('foobar.com');
 	// var cacert = sshpk.createSelfSignedCertificate(ca, EC2_KEY);
 	var leaf_cert = await sshpk.createCertificate(parallels, EC_KEY, id, KMS_KEY, {
