@@ -18,35 +18,35 @@ var JIM_KEY, JIM_SSH, JIM_X509, JIM_X509_TXT;
 var EC_KEY, EC_KEY2;
 var SUE_KEY;
 
-test('setup', function (t) {
+test('setup', async function (t) {
 	var d = fs.readFileSync(path.join(testDir, 'id_dsa'));
-	GEORGE_KEY = sshpk.parseKey(d);
+	GEORGE_KEY = await sshpk.parseKey(d);
 	GEORGE_SSH = fs.readFileSync(path.join(testDir, 'george-openssh.pub'));
 	GEORGE_X509 = fs.readFileSync(path.join(testDir, 'george-x509.pem'));
 
 	d = fs.readFileSync(path.join(testDir, 'id_dsa2'));
-	BARRY_KEY = sshpk.parsePrivateKey(d);
+	BARRY_KEY = await sshpk.parsePrivateKey(d);
 
 	d = fs.readFileSync(path.join(testDir, 'id_rsa'));
-	JIM_KEY = sshpk.parsePrivateKey(d);
+	JIM_KEY = await sshpk.parsePrivateKey(d);
 
 	JIM_SSH = fs.readFileSync(path.join(testDir, 'jim-openssh.pub'));
 	JIM_X509 = fs.readFileSync(path.join(testDir, 'jim-x509.pem'));
 	JIM_X509_TXT = fs.readFileSync(path.join(testDir, 'jim-x509-text.pem'));
 
 	d = fs.readFileSync(path.join(testDir, 'id_ecdsa'));
-	EC_KEY = sshpk.parsePrivateKey(d);
+	EC_KEY = await sshpk.parsePrivateKey(d);
 	d = fs.readFileSync(path.join(testDir, 'id_ecdsa2'));
-	EC2_KEY = sshpk.parsePrivateKey(d);
+	EC2_KEY = await sshpk.parsePrivateKey(d);
 
 	d = fs.readFileSync(path.join(testDir, 'id_ed25519'));
-	SUE_KEY = sshpk.parsePrivateKey(d);
+	SUE_KEY = await sshpk.parsePrivateKey(d);
 
 	t.end();
 });
 
-test('dsa openssh cert self-signed', function (t) {
-	var cert = sshpk.parseCertificate(GEORGE_SSH, 'openssh');
+test('dsa openssh cert self-signed', async function (t) {
+	var cert = await sshpk.parseCertificate(GEORGE_SSH, 'openssh');
 	t.ok(sshpk.Certificate.isCertificate(cert));
 
 	t.ok(GEORGE_KEY.fingerprint().matches(cert.subjectKey));
@@ -68,8 +68,8 @@ test('dsa openssh cert self-signed', function (t) {
 	t.end();
 });
 
-test('dsa x509 cert self-signed', function (t) {
-	var cert = sshpk.parseCertificate(GEORGE_X509, 'pem');
+test('dsa x509 cert self-signed', async function (t) {
+	var cert = await sshpk.parseCertificate(GEORGE_X509, 'pem');
 	t.ok(sshpk.Certificate.isCertificate(cert));
 
 	t.ok(GEORGE_KEY.fingerprint().matches(cert.subjectKey));
@@ -85,15 +85,15 @@ test('dsa x509 cert self-signed', function (t) {
 	t.strictEqual(cert.subjects[0].type, 'user');
 	t.strictEqual(cert.subjects[0].uid, 'george');
 
-	var fp = sshpk.parseFingerprint(
+	var fp = await sshpk.parseFingerprint(
 	    'SHA256:rPrIM16iuYN1UkWprtIkRaUzerKz0JkNd/FjKG7OJCU',
 	    { type: 'certificate '});
 	t.ok(fp.matches(cert));
 	t.end();
 });
 
-test('rsa openssh cert self-signed', function (t) {
-	var cert = sshpk.parseCertificate(JIM_SSH, 'openssh');
+test('rsa openssh cert self-signed', async function (t) {
+	var cert = await sshpk.parseCertificate(JIM_SSH, 'openssh');
 	t.ok(sshpk.Certificate.isCertificate(cert));
 
 	t.ok(JIM_KEY.fingerprint().matches(cert.subjectKey));
@@ -114,8 +114,8 @@ test('rsa openssh cert self-signed', function (t) {
 	t.end();
 });
 
-test('rsa x509 cert self-signed', function (t) {
-	var cert = sshpk.parseCertificate(JIM_X509, 'pem');
+test('rsa x509 cert self-signed', async function (t) {
+	var cert = await sshpk.parseCertificate(JIM_X509, 'pem');
 	t.ok(sshpk.Certificate.isCertificate(cert));
 
 	t.ok(JIM_KEY.fingerprint().matches(cert.subjectKey));
@@ -137,25 +137,25 @@ test('rsa x509 cert self-signed', function (t) {
 	t.end();
 });
 
-test('x509 pem cert with extra text', function (t) {
-	var cert = sshpk.parseCertificate(JIM_X509_TXT, 'pem');
+test('x509 pem cert with extra text', async function (t) {
+	var cert = await sshpk.parseCertificate(JIM_X509_TXT, 'pem');
 	t.ok(sshpk.Certificate.isCertificate(cert));
 	t.ok(JIM_KEY.fingerprint().matches(cert.subjectKey));
 	t.ok(cert.isSignedByKey(JIM_KEY));
 	t.end();
 });
 
-test('create rsa self-signed, loopback', function (t) {
-	var id = sshpk.identityForHost('foobar.com');
-	var cert = sshpk.createSelfSignedCertificate(id, JIM_KEY);
+test('create rsa self-signed, loopback', async function (t) {
+	var id = await sshpk.identityForHost('foobar.com');
+	var cert = await sshpk.createSelfSignedCertificate(id, JIM_KEY);
 
 	var x509 = cert.toBuffer('pem');
-	var cert2 = sshpk.parseCertificate(x509, 'pem');
+	var cert2 = await sshpk.parseCertificate(x509, 'pem');
 	t.ok(JIM_KEY.fingerprint().matches(cert2.subjectKey));
 	t.ok(cert2.subjects[0].equals(cert.subjects[0]));
 
 	var ossh = cert.toBuffer('openssh');
-	var cert3 = sshpk.parseCertificate(ossh, 'openssh');
+	var cert3 = await sshpk.parseCertificate(ossh, 'openssh');
 	t.ok(JIM_KEY.fingerprint().matches(cert3.subjectKey));
 	t.ok(cert3.subjects[0].equals(cert.subjects[0]));
 	t.strictEqual(cert3.subjects[0].hostname, 'foobar.com');
@@ -163,20 +163,20 @@ test('create rsa self-signed, loopback', function (t) {
 	t.end();
 });
 
-test('create ecdsa signed, loopback', function (t) {
-	var id = sshpk.identityForUser('jim');
-	var ca = sshpk.identityForHost('foobar.com');
-	var cacert = sshpk.createSelfSignedCertificate(ca, EC2_KEY);
-	var cert = sshpk.createCertificate(id, EC_KEY, ca, EC2_KEY);
+test('create ecdsa signed, loopback', async function (t) {
+	var id = await sshpk.identityForUser('jim');
+	var ca = await sshpk.identityForHost('foobar.com');
+	var cacert = await sshpk.createSelfSignedCertificate(ca, EC2_KEY);
+	var cert = await sshpk.createCertificate(id, EC_KEY, ca, EC2_KEY);
 
 	var x509 = cert.toBuffer('pem');
-	var cert2 = sshpk.parseCertificate(x509, 'pem');
+	var cert2 = await sshpk.parseCertificate(x509, 'pem');
 	t.ok(EC_KEY.fingerprint().matches(cert2.subjectKey));
 	t.ok(cert2.subjects[0].equals(cert.subjects[0]));
 	t.ok(cert2.isSignedBy(cacert));
 
 	var ossh = cert.toBuffer('openssh');
-	var cert3 = sshpk.parseCertificate(ossh, 'openssh');
+	var cert3 = await sshpk.parseCertificate(ossh, 'openssh');
 	t.ok(EC_KEY.fingerprint().matches(cert3.subjectKey));
 	t.ok(cert3.subjects[0].equals(cert.subjects[0]));
 	t.strictEqual(cert3.subjects[0].uid, 'jim');
@@ -185,18 +185,18 @@ test('create ecdsa signed, loopback', function (t) {
 	t.end();
 });
 
-test('create ed25519 self-signed, loopback', function (t) {
-	var id = sshpk.identityForHost('foobar.com');
-	var cert = sshpk.createSelfSignedCertificate(id, SUE_KEY);
+test('create ed25519 self-signed, loopback', async function (t) {
+	var id = await sshpk.identityForHost('foobar.com');
+	var cert = await sshpk.createSelfSignedCertificate(id, SUE_KEY);
 
 	var x509 = cert.toBuffer('pem');
-	var cert2 = sshpk.parseCertificate(x509, 'pem');
+	var cert2 = await sshpk.parseCertificate(x509, 'pem');
 	t.ok(SUE_KEY.fingerprint().matches(cert2.subjectKey));
 	t.ok(cert2.subjects[0].equals(cert.subjects[0]));
 	t.ok(cert2.isSignedByKey(SUE_KEY));
 
 	var ossh = cert.toBuffer('openssh');
-	var cert3 = sshpk.parseCertificate(ossh, 'openssh');
+	var cert3 = await sshpk.parseCertificate(ossh, 'openssh');
 	t.ok(SUE_KEY.fingerprint().matches(cert3.subjectKey));
 	t.ok(cert3.subjects[0].equals(cert.subjects[0]));
 	t.strictEqual(cert3.subjects[0].hostname, 'foobar.com');
@@ -204,16 +204,16 @@ test('create ed25519 self-signed, loopback', function (t) {
 	t.end();
 });
 
-test('subjectaltname', function (t) {
+test('subjectaltname', async function (t) {
 	var ids = [
 		sshpk.identityForHost('foobar.com'),
 		sshpk.identityForHost('www.foobar.com'),
 		sshpk.identityForHost('mail.foobar.com')
 	];
-	var cert = sshpk.createSelfSignedCertificate(ids, JIM_KEY);
+	var cert = await sshpk.createSelfSignedCertificate(ids, JIM_KEY);
 
 	var x509 = cert.toBuffer('pem');
-	var cert2 = sshpk.parseCertificate(x509, 'pem');
+	var cert2 = await sshpk.parseCertificate(x509, 'pem');
 	t.ok(JIM_KEY.fingerprint().matches(cert2.subjectKey));
 	t.strictEqual(cert2.subjects.length, 3);
 	t.ok(cert2.subjects[0].equals(cert.subjects[0]));
@@ -222,7 +222,7 @@ test('subjectaltname', function (t) {
 	t.strictEqual(cert2.subjects[1].hostname, 'www.foobar.com');
 
 	var ossh = cert.toBuffer('openssh');
-	var cert3 = sshpk.parseCertificate(ossh, 'openssh');
+	var cert3 = await sshpk.parseCertificate(ossh, 'openssh');
 	t.ok(JIM_KEY.fingerprint().matches(cert3.subjectKey));
 	t.ok(cert3.subjects[0].equals(cert.subjects[0]));
 	t.strictEqual(cert3.subjects.length, 3);
@@ -232,8 +232,8 @@ test('subjectaltname', function (t) {
 	t.end();
 });
 
-test('napoleon cert (generalizedtime) (x509)', function (t) {
-	var cert = sshpk.parseCertificate(
+test('napoleon cert (generalizedtime) (x509)', async function (t) {
+	var cert = await sshpk.parseCertificate(
 	    fs.readFileSync(path.join(testDir, 'napoleon-cert.pem')), 'pem');
 	t.strictEqual(cert.subjectKey.type, 'rsa');
 	t.ok(cert.isExpired(new Date('1901-01-01T00:00Z')));
@@ -254,8 +254,8 @@ test('napoleon cert (generalizedtime) (x509)', function (t) {
 	t.end();
 });
 
-test('example cert: digicert ca (x509)', function (t) {
-	var cert = sshpk.parseCertificate(
+test('example cert: digicert ca (x509)', async function (t) {
+	var cert = await sshpk.parseCertificate(
 	    fs.readFileSync(path.join(testDir, 'digicert-ca.crt')), 'x509');
 	t.strictEqual(cert.subjectKey.type, 'rsa');
 	t.strictEqual(cert.subjects.length, 1);
@@ -275,8 +275,8 @@ test('example cert: digicert ca (x509)', function (t) {
 	t.end();
 });
 
-test('example cert: digicert (x509)', function (t) {
-	var cert = sshpk.parseCertificate(
+test('example cert: digicert (x509)', async function (t) {
+	var cert = await sshpk.parseCertificate(
 	    fs.readFileSync(path.join(testDir, 'digicert.pem')), 'pem');
 	t.strictEqual(cert.subjectKey.type, 'rsa');
 	t.strictEqual(cert.subjects.length, 8);
@@ -286,33 +286,33 @@ test('example cert: digicert (x509)', function (t) {
 	t.strictEqual(cert.issuer.get('c'), 'US');
 	t.strictEqual(cert.issuer.get('o'), 'DigiCert Inc');
 
-	var cacert = sshpk.parseCertificate(
+	var cacert = await sshpk.parseCertificate(
 	    fs.readFileSync(path.join(testDir, 'digicert-ca.crt')), 'x509');
 	t.ok(cert.isSignedBy(cacert));
 	t.end();
 });
 
-test('example cert: joyent (x509)', function (t) {
+test('example cert: joyent (x509)', async function (t) {
 	var data = fs.readFileSync(path.join(testDir, 'joyent.pem'));
-	var cert = sshpk.parseCertificate(data, 'pem');
+	var cert = await sshpk.parseCertificate(data, 'pem');
 	t.strictEqual(cert.subjectKey.type, 'rsa');
 	t.strictEqual(cert.subjects[0].type, 'host');
 	t.strictEqual(cert.subjects[0].hostname, '*.joyent.com');
 	t.deepEqual(cert.purposes.sort(),
 	    ['clientAuth', 'keyEncryption', 'serverAuth', 'signature']);
 
-	var fp = sshpk.parseFingerprint(
+	var fp = await sshpk.parseFingerprint(
 	    'SHA1:6UMWRUe9vr93cg8AGS7Nwl1XOAA',
 	    { type: 'certificate' });
 	t.ok(fp.matches(cert));
 	t.end();
 });
 
-test('example cert: cloudflare (x509)', function (t) {
-	var cert = sshpk.parseCertificate(
+test('example cert: cloudflare (x509)', async function (t) {
+	var cert = await sshpk.parseCertificate(
 	    fs.readFileSync(path.join(testDir, 'cloudflare.pem')), 'pem');
 	t.strictEqual(cert.subjectKey.type, 'ecdsa');
-	var id = sshpk.identityForHost('mail.imeyou.io');
+	var id = await sshpk.identityForHost('mail.imeyou.io');
 	t.ok(cert.subjects.some(function (subj) {
 		return (subj.equals(id));
 	}));
@@ -320,14 +320,14 @@ test('example cert: cloudflare (x509)', function (t) {
 	t.strictEqual(fp.toUpperCase(),
 	    'B7:11:BA:8E:83:43:E0:4D:A2:DC:6F:F7:87:2B:5D:78:2C:B1:31:2A');
 
-	var cacert = sshpk.parseCertificate(
+	var cacert = await sshpk.parseCertificate(
 	    fs.readFileSync(path.join(testDir, 'comodo.crt')), 'x509');
 	t.ok(cert.isSignedBy(cacert));
 	t.end();
 });
 
-test('example cert: letsencrypt (x509)', function (t) {
-	var cert = sshpk.parseCertificate(
+test('example cert: letsencrypt (x509)', async function (t) {
+	var cert = await sshpk.parseCertificate(
 	    fs.readFileSync(path.join(testDir, 'letsencrypt.pem')), 'pem');
 	t.strictEqual(cert.subjectKey.type, 'rsa');
 	t.strictEqual(cert.subjects[0].type, 'host');
@@ -338,36 +338,36 @@ test('example cert: letsencrypt (x509)', function (t) {
 	t.end();
 });
 
-test('example cert: DSA example (x509 DER)', function (t) {
-	var cert = sshpk.parseCertificate(
+test('example cert: DSA example (x509 DER)', async function (t) {
+	var cert = await sshpk.parseCertificate(
 	    fs.readFileSync(path.join(testDir, '1024b-dsa-example-cert.der')),
 	    'x509');
 	t.strictEqual(cert.subjectKey.type, 'dsa');
 	t.strictEqual(cert.subjects[0].type, 'host');
 	t.strictEqual(cert.subjects[0].hostname, 'www.example.com');
 
-	var cacert = sshpk.parseCertificate(
+	var cacert = await sshpk.parseCertificate(
 	    fs.readFileSync(path.join(testDir, 'frank4dd-cacert.der')), 'x509');
 	t.ok(cert.isSignedBy(cacert));
 	t.end();
 });
 
-test('example cert: lots of SAN (x509)', function (t) {
-	var cert = sshpk.parseCertificate(
+test('example cert: lots of SAN (x509)', async function (t) {
+	var cert = await sshpk.parseCertificate(
 	    fs.readFileSync(path.join(testDir, 'google_jp_458san.pem')),
 	    'pem');
 	t.strictEqual(cert.subjectKey.type, 'rsa');
 	t.strictEqual(cert.subjects[0].type, 'host');
 	t.strictEqual(cert.subjects[0].hostname, 'google.com');
-	var id = sshpk.identityForHost('google.co.jp');
+	var id = await sshpk.identityForHost('google.co.jp');
 	t.ok(cert.subjects.some(function (subj) {
 		return (subj.equals(id));
 	}));
 	t.end();
 });
 
-test('example cert: openssh rsa with sha256 (7.0p1+)', function (t) {
-	var cert = sshpk.parseCertificate(
+test('example cert: openssh rsa with sha256 (7.0p1+)', async function (t) {
+	var cert = await sshpk.parseCertificate(
 	    fs.readFileSync(path.join(testDir, 'openssh-rsa256.pub')),
 	    'openssh');
 	t.strictEqual(cert.subjectKey.type, 'rsa');
@@ -377,23 +377,23 @@ test('example cert: openssh rsa with sha256 (7.0p1+)', function (t) {
 	t.end();
 });
 
-test('example cert: ed25519 cert from curdle-pkix-04', function (t) {
-	var cert = sshpk.parseCertificate(
+test('example cert: ed25519 cert from curdle-pkix-04', async function (t) {
+	var cert = await sshpk.parseCertificate(
 	    fs.readFileSync(path.join(testDir, 'ed25519-pkix-cert.pem')),
 	    'pem');
 	t.strictEqual(cert.subjectKey.type, 'curve25519');
 	t.strictEqual(cert.subjects[0].type, 'user');
 	t.strictEqual(cert.subjects[0].cn, 'IETF Test Demo');
 
-	var key = sshpk.parsePrivateKey(
+	var key = await sshpk.parsePrivateKey(
 	    fs.readFileSync(path.join(testDir, 'ed25519-pkix.pem')), 'pem');
 	t.ok(cert.isSignedByKey(key));
 
 	t.end();
 });
 
-test('cert with doubled-up DN attribute', function (t) {
-	var cert = sshpk.parseCertificate(
+test('cert with doubled-up DN attribute', async function (t) {
+	var cert = await sshpk.parseCertificate(
 	    fs.readFileSync(path.join(testDir, 'double-title-cert.pem')),
 	    'pem');
 
@@ -409,8 +409,8 @@ test('cert with doubled-up DN attribute', function (t) {
 	t.end();
 });
 
-test('example cert: yubikey attestation cert', function (t) {
-	var cert = sshpk.parseCertificate(
+test('example cert: yubikey attestation cert', async function (t) {
+	var cert = await sshpk.parseCertificate(
 	    fs.readFileSync(path.join(testDir, 'yubikey.pem')),
 	    'pem');
 	t.strictEqual(cert.subjectKey.type, 'ecdsa');
@@ -429,8 +429,8 @@ test('example cert: yubikey attestation cert', function (t) {
 	t.end();
 });
 
-test('example cert: openssh extensions', function (t) {
-	var cert = sshpk.parseCertificate(
+test('example cert: openssh extensions', async function (t) {
+	var cert = await sshpk.parseCertificate(
 	    fs.readFileSync(path.join(testDir, 'openssh-exts.pub')),
 	    'openssh');
 	t.strictEqual(cert.subjectKey.type, 'ecdsa');

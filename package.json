@@ -54,6 +54,7 @@
   },
   "devDependencies": {
     "benchmark": "^1.0.0",
+    "prettier": "3.3.3",
     "sinon": "^1.17.2",
     "tape": "^3.5.0",
     "temp": "^0.8.2"
