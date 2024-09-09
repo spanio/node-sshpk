@@ -11,6 +11,7 @@ var asn1 = require('asn1');
 var SSHBuffer = require('../lib/ssh-buffer');
 var kms = require('../lib/formats/kms');
 const { KMS } = require('aws-sdk');
+const {PrivateKey} = require("../lib");
 // const fs = require('fs');
 
 var testDir = path.join(__dirname, 'assets');
@@ -96,8 +97,9 @@ test('create a certificate from kms', async function (t) {
 
 test('create ecdsa kms ', async function (t) {
 	const id = sshpk.identityForUser('CA');
-	const KMS_KEY = await sshpk.parsePrivateKey(KMS_KEY_ARN);
-	const cert = await sshpk.createSelfSignedCertificate(id, KMS_KEY);
+	const publicKey = await kms.read(KMS_KEY_ARN, {});
+	const wrapperPrivateKey = new PrivateKey(publicKey)
+	const cert = await sshpk.createSelfSignedCertificate(id, wrapperPrivateKey);
 	console.log("cert: ", cert)
 	t.end();
 });
