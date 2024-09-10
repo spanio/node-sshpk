@@ -28,7 +28,10 @@ test('read a public key from kms', async function (t) {
 
 test('create a certificate from kms', async function (t) {
 	const id = sshpk.identityForUser("CA");
-	const parallels = sshpk.identityForUser("span-12345678");
+	const serialNumber = "gen3-panel-serial-12345678"
+	const parallels = [
+		sshpk.identityForUser("span-" + serialNumber),
+	];
 	const publicKey = await kms.read(KMS_KEY_ARN, {});
 
 	const leafCert = await sshpk.createCertificate(parallels, EC_KEY, id, publicKey, {
